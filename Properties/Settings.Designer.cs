@@ -58,5 +58,17 @@ namespace BacklashCompensator.Properties {
                 this["ZCompensation"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool removeZMovements {
+            get {
+                return ((bool)(this["removeZMovements"]));
+            }
+            set {
+                this["removeZMovements"] = value;
+            }
+        }
     }
 }

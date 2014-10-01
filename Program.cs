@@ -17,6 +17,8 @@ namespace BacklashCompensator
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new frmBacklashCompensator());
+
+            
         }
     }
 }
