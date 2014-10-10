@@ -9,11 +9,14 @@ using System.Text;
 using System.Windows.Forms;
 using System.Text.RegularExpressions;
 using System.IO;
+using BacklashCompensator.classes;
 
 namespace BacklashCompensator
 {
     public partial class frmBacklashCompensator : Form
     {
+        private List<AbstractPostProcessor> _lstPostProcessors = new List<AbstractPostProcessor>();
+
         public frmBacklashCompensator()
         {
             InitializeComponent();
@@ -30,85 +33,48 @@ namespace BacklashCompensator
             if (args.Length > 2)
                 File.WriteAllLines(args[2], txtOutput.Lines);
 
+        }
 
-            
+        private void initPostProcessors()
+        {
+            _lstPostProcessors.Clear();
+
+            if (chkRemoveZMovements.Checked)
+                _lstPostProcessors.Add(new LineRemover("G(0|1).*Z.*"));
+
+            _lstPostProcessors.Add(new Compensator("X", nudX.Value));
+            _lstPostProcessors.Add(new Compensator("Y", nudY.Value));
+            _lstPostProcessors.Add(new Compensator("Z", nudZ.Value));
+
         }
 
         private void txtInput_TextChanged(object sender, EventArgs e)
         {
-            updateOutput();
+            process();
         }
 
-        private void updateOutput()
+        private void process()
         {
+            initPostProcessors();
+
             String[] lines  = txtInput.Lines;
 
-            if(chkRemoveZMovements.Checked)
-                lines = removeLines(lines, "G(0|1).*Z.*");
+            foreach (AbstractPostProcessor pp in _lstPostProcessors)
+            {
+                pp.LoadGCodeLines(lines);
+                lines = pp.GetOutput();
+            }
             
-            lines = doCompensation(lines);
-
             txtOutput.Lines = lines;
         }
 
-        /// <summary>
-        /// Supprime les mouvements des axes à ignorer
-        /// </summary>
-        /// <param name="lines"></param>
-        /// <returns></returns>
-        private string[] removeLines(String[] lines, String regExp)
-        {
-            List<String> lst = new List<String>();
-                        
-            Regex exp = new Regex(regExp);
-
-            foreach(String line in lines)
-            {
-                Match m = exp.Match(line);
-                if (m.Success)
-                    continue;
-
-                lst.Add(line);
-            }
-
-            return lst.ToArray();
-        }
-
-        private string[] doCompensation(String[] lines)
-        {
-            Compensator cx = new Compensator();
-            cx.AxisName = "X";
-            cx.CompensationAmount = nudX.Value;
-
-            Compensator cy = new Compensator();
-            cy.AxisName = "Y";
-            cy.CompensationAmount = nudY.Value;
-
-            Compensator cz = new Compensator();
-            cz.AxisName = "Z";
-            cz.CompensationAmount = nudZ.Value;
-
-            cx.lines_arr = lines;
-
-            lines = cx.injectCompensation();
-
-            cy.lines_arr = lines;
-
-            lines = cy.injectCompensation();
-
-            cz.lines_arr = lines;
-
-            lines = cz.injectCompensation();
-
-            return lines;
-        }
-
+        #region Evenements de changements de paramètres
         private void nudX_ValueChanged(object sender, EventArgs e)
         {
             Settings.Default.XCompensation = nudX.Value;
             Settings.Default.Save();
 
-            updateOutput();
+            process();
         }
 
         private void nudY_ValueChanged(object sender, EventArgs e)
@@ -116,28 +82,39 @@ namespace BacklashCompensator
             Settings.Default.YCompensation = nudY.Value;
             Settings.Default.Save();
 
-            updateOutput();
+            process();
         }
 
         private void nudZ_ValueChanged(object sender, EventArgs e)
         {
             Settings.Default.ZCompensation = nudZ.Value;
             Settings.Default.Save();
-            updateOutput();
+            process();
         }
 
         private void chkRemoveZMovements_CheckedChanged(object sender, EventArgs e)
         {
             Settings.Default.removeZMovements = chkRemoveZMovements.Checked;
             Settings.Default.Save();
-            updateOutput();
+            process();
         }
+        #endregion
 
+        /// <summary>
+        /// Copie la sortie dans le presse papier
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnCopyClipboard_Click(object sender, EventArgs e)
         {
             Clipboard.SetText(txtOutput.Text);
         }
 
+        /// <summary>
+        /// Quand on lache un fichier sur la zone input
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void txtInput_DragDrop(object sender, DragEventArgs e)
         {
             String[] file_arr = (String[])e.Data.GetData(DataFormats.FileDrop);
@@ -149,6 +126,10 @@ namespace BacklashCompensator
 
         }
 
+        /// <summary>
+        /// charge un fichier
+        /// </summary>
+        /// <param name="path"></param>
         private void loadFile(String path)
         {
             String[] lines = File.ReadAllLines(path);

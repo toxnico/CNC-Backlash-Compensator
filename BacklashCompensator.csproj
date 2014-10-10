@@ -42,13 +42,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Compensator.cs" />
+    <Compile Include="classes\Compensator.cs" />
+    <Compile Include="classes\AbstractPostProcessor.cs" />
+    <Compile Include="classes\LineRemover.cs" />
     <Compile Include="frmBacklashCompensator.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="frmBacklashCompensator.Designer.cs">
       <DependentUpon>frmBacklashCompensator.cs</DependentUpon>
     </Compile>
+    <Compile Include="classes\PauseInserter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="frmBacklashCompensator.resx">
@@ -74,6 +77,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
