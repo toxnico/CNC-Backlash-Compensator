@@ -4,3 +4,5 @@ If you have a home made CNC machine that has backlash on some axis, this program
 
 Movement compensation is added before every direction change.
 CNC Backlash Compensator is a program written in C#, feel free to modify it according to your needs!
+
+Tags : CNC, backlash, g-code, compensation
